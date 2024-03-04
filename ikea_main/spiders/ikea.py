@@ -2,10 +2,18 @@ import scrapy
 import xmltodict
 from scrapy import Spider, Request
 from ..items import IkeaMainItem
+from urllib.parse import urlencode
+
+API_KEY =''
+
+def get_scraperapi_url(url):
+    payload = {'api_key': API_KEY, 'url': url}
+    proxy_url = 'http://api.scraperapi.com/?' + urlencode(payload)
+    return proxy_url
 
 class IkeaSpider(scrapy.Spider):
     name = 'ikea'
-    allowed_domains = ['ikea.com.tr']
+    allowed_domains = ['ikea.com.tr','api.scraperapi.com']
     start_urls = ['https://cdn.ikea.com.tr/sitemap/sitemap.xml']
 
     custom_settings = {
@@ -37,7 +45,7 @@ class IkeaSpider(scrapy.Spider):
             for  url in listing_urls[:]:
                 if 'kategori' in url['loc']:
                     yield Request(
-                        url=url['loc'], 
+                        url=get_scraperapi_url(url['loc']), 
                         callback=self.parse_listing
                     )
     
@@ -51,7 +59,7 @@ class IkeaSpider(scrapy.Spider):
             size=size,
         )
         yield Request(
-            url=url_api,
+            url=get_scraperapi_url(url_api),
             callback=self.parse_api,
             meta={
                 'cat_code': cat_code,
@@ -75,7 +83,7 @@ class IkeaSpider(scrapy.Spider):
             except:
                 old_price=price
             yield Request(
-                url=scrap_url,
+                url=get_scraperapi_url(scrap_url),
                 callback=self.parse_product,
                 meta={
                     'price':price,
@@ -91,7 +99,7 @@ class IkeaSpider(scrapy.Spider):
                 size=40,
             )
             yield Request(
-                url=url_api,
+                url=get_scraperapi_url(url_api),
                 callback=self.parse_api,
                 meta={
                     'cat_code': cat_code,
@@ -107,7 +115,7 @@ class IkeaSpider(scrapy.Spider):
                 size=40,
             )
             yield Request(
-                url=url_api,
+                url=get_scraperapi_url(url_api),
                 callback=self.parse_api,
                 meta={
                     'cat_code': cat_code,
